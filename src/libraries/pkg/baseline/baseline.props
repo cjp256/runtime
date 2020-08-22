@@ -13,11 +13,6 @@
     Below targets should moved to packaging.targets in BuildTools but keeping in corefx for convenience right now
   -->
 
-  <Target Name="BlockStable" Condition="'$(SuppressFinalPackageVersion)' == 'true'" AfterTargets="CalculatePackageVersion">
-    <!-- DO NOT ship this packages as stable -->
-    <Error Condition="!$(PackageVersion.Contains('-'))" Text="Package $(Id) should not be built stable" />
-  </Target>
-
   <!-- Get the package version if it isn't marked as block stable -->
   <Target Name="GetPackageIdentityIfStable"
           Returns="@(_StablePackageIdentity)">
