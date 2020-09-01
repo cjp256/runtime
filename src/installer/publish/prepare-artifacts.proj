@@ -118,6 +118,13 @@
       <TempWorkingDir>$(ArtifactsObjDir)TempWorkingDir\$([System.Guid]::NewGuid())\</TempWorkingDir>
     </PropertyGroup>
 
+    <!-- Generate productVersion.txt containing the value of $(PackageVersion) -->
+    <WriteLinesToFile
+      File="$(ArtifactsShippingPackagesDir)productVersion.txt"
+      Lines="$(PackageVersion)"
+      Overwrite="true"
+      Encoding="ASCII" />
+
     <ItemGroup>
       <ItemsToPush Remove="@(ItemsToPush)" />
 
@@ -131,6 +138,11 @@
         <RelativeBlobPath>$(InstallersRelativePath)%(Filename)%(Extension)</RelativeBlobPath>
         <Category>Checksum</Category>
       </ItemsToPush>
+
+      <ItemsToPush Include="$(ArtifactsShippingPackagesDir)productVersion.txt">
+        <RelativeBlobPath>$(InstallersRelativePath)productVersion.txt</RelativeBlobPath>
+      </ItemsToPush>
+
     </ItemGroup>
 
     <!-- Push items to AzDO as build artifacts, generating the asset manifest as a side effect. -->
