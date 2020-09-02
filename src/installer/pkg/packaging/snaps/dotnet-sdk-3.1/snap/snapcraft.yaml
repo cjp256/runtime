@@ -1,5 +1,5 @@
 name: dotnet-sdk
-version: 3.1.200
+version: 3.1.401
 summary: Cross-Platform .NET Core SDK
 description: |
   .NET Core SDK. https://dot.net/core.
@@ -10,14 +10,17 @@ confinement: classic
 apps:
   dotnet:
     command: dotnet
+    environment:
+      DOTNET_ROOT: $SNAP
 
 base: core18
 
 parts:
   dotnet-sdk:
       plugin: dump
-      source: https://download.visualstudio.microsoft.com/download/pr/daec2daf-b458-4ae1-9046-b8ba09b5fb49/733e2d73b41640d6e6bdf1cc6b9ef03b/dotnet-sdk-3.1.200-linux-x64.tar.gz
-      source-checksum: sha512/5b9398c7bfe7f67cd9f38fdd4e6e429e1b6aaac0fe04672be0f8dca26580fb46906fd1d2deea6a7d3fb07d77e898f067d3ac1805fe077dc7c1adf9515c9bc9a9
+      source: https://download.visualstudio.microsoft.com/download/pr/4f9b8a64-5e09-456c-a087-527cfc8b4cd2/15e14ec06eab947432de139f172f7a98/dotnet-sdk-3.1.401-linux-x64.tar.gz
+      source-checksum: sha512/5498add9ef83da44d8f7806ca1ce335ad4193c0d3181a5abda4b65e116c7331aac37a229817ff148e4487e9734ad2438f102a0eef0049e26773a185ceb78aac4
+
       stage-packages:
         - libicu60
         - libssl1.0.0
@@ -29,6 +32,24 @@ parts:
         - libtinfo5
         - liblttng-ust0
         - liburcu6
+
+      override-prime: |
+        snapcraftctl prime
+
+        # Snapcraft sets RPATH for all classic executables.  This restores the
+        # original rpath, extending it to include the required dependencies from
+        # the core18 base, as well an from the sdk snap.  There is no harm if
+        # the sdk snap is unavailable (it could depend on runtime snap or be a
+        # self-contained runtime build). Note though, DOTNET_ROOT may still be
+        # required to find libhostfxr.so for non-self-contained builds.
+        rpath='$ORIGIN/netcoredeps'  # found in the original binaries
+        rpath="${rpath}:/snap/core18/current/lib/$SNAPCRAFT_ARCH_TRIPLET"
+        rpath="${rpath}:/snap/core18/current/usr/lib/$SNAPCRAFT_ARCH_TRIPLET"
+        rpath="${rpath}:/snap/dotnet-sdk/current/usr/lib/$SNAPCRAFT_ARCH_TRIPLET"
+
+        /snap/snapcraft/current/bin/patchelf --force-rpath --set-rpath "${rpath}" \
+          "$SNAPCRAFT_PRIME/packs/Microsoft.NETCore.App.Host.linux-x64/3.1.7/runtimes/linux-x64/native/apphost" \
+          "$SNAPCRAFT_PRIME/sdk/3.1.401/AppHostTemplate/apphost"
 
   runtime-wrapper:
       plugin: dump
